@@ -127,6 +127,7 @@ enum class DrmHwcBlending : int32_t {
   kCoverage = HWC_BLENDING_COVERAGE,
 };
 
+// 代表 drm 已经 surface 一个 layer
 struct DrmHwcLayer {
   buffer_handle_t sf_handle = NULL;
   int gralloc_buffer_usage = 0;

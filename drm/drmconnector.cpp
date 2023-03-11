@@ -27,6 +27,7 @@
 
 namespace android {
 
+// 当前的 DrmConector 连接
 DrmConnector::DrmConnector(DrmDevice *drm, drmModeConnectorPtr c,
                            DrmEncoder *current_encoder,
                            std::vector<DrmEncoder *> &possible_encoders)

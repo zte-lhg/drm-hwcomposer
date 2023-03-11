@@ -42,6 +42,7 @@ DrmDevice::~DrmDevice() {
   event_listener_.Exit();
 }
 
+// 初始化 device 
 std::tuple<int, int> DrmDevice::Init(const char *path, int num_displays) {
   /* TODO: Use drmOpenControl here instead */
   fd_.Set(open(path, O_RDWR));

@@ -128,7 +128,7 @@ void VSyncWorker::Routine() {
 
   bool enabled = enabled_;
   int display = display_;
-  std::shared_ptr<VsyncCallback> callback(callback_);
+  std::shared_ptr<VsyncCallback> callback(callback_); // 获取 VsyncCallback 回调函数
   Unlock();
 
   if (!enabled)
@@ -148,7 +148,7 @@ void VSyncWorker::Routine() {
   vblank.request.sequence = 1;
 
   int64_t timestamp;
-  ret = drmWaitVBlank(drm_->fd(), &vblank);
+  ret = drmWaitVBlank(drm_->fd(), &vblank);  // 等待内核的 vsync 信号
   if (ret == -EINTR) {
     return;
   } else if (ret) {

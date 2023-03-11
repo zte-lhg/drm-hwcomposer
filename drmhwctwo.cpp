@@ -57,6 +57,7 @@ DrmHwcTwo::DrmHwcTwo() {
   getFunction = HookDevGetFunction;
 }
 
+// 创建一个 display，一个display 对应一个 device以及一个 DrmCrtc
 HWC2::Error DrmHwcTwo::CreateDisplay(hwc2_display_t displ,
                                      HWC2::DisplayType type) {
   DrmDevice *drm = resource_manager_.GetDrmDevice(displ);
@@ -75,7 +76,7 @@ HWC2::Error DrmHwcTwo::CreateDisplay(hwc2_display_t displ,
     return HWC2::Error::BadDisplay;
   }
   std::vector<DrmPlane *> display_planes;
-  for (auto &plane : drm->planes()) {
+  for (auto &plane : drm->planes()) {  // 获取当前 drm 对应的所有 planes
     if (plane->GetCrtcSupported(*crtc))
       display_planes.push_back(plane.get());
   }
@@ -99,9 +100,9 @@ HWC2::Error DrmHwcTwo::Init() {
     }
   }
 
-  auto &drmDevices = resource_manager_.getDrmDevices();
+  auto &drmDevices = resource_manager_.getDrmDevices();  // 从 resource_manager 获取所以的 DrmDevices
   for (auto &device : drmDevices) {
-    device->RegisterHotplugHandler(new DrmHotplugHandler(this, device.get()));
+    device->RegisterHotplugHandler(new DrmHotplugHandler(this, device.get()));  // 注册 HotPlusHandler 回调 handler
   }
   return ret;
 }
@@ -116,6 +117,7 @@ static inline void supported(char const *func) {
   ALOGV("Supported function: %s", func);
 }
 
+// 创建虚拟显示 Display
 HWC2::Error DrmHwcTwo::CreateVirtualDisplay(uint32_t width, uint32_t height,
                                             int32_t *format,
                                             hwc2_display_t *display) {
@@ -138,7 +140,7 @@ uint32_t DrmHwcTwo::GetMaxVirtualDisplayCount() {
   unsupported(__func__);
   return 0;
 }
-
+// 注册回调
 HWC2::Error DrmHwcTwo::RegisterCallback(int32_t descriptor,
                                         hwc2_callback_data_t data,
                                         hwc2_function_pointer_t function) {
@@ -190,6 +192,8 @@ void DrmHwcTwo::HwcDisplay::ClearDisplay() {
   compositor_.ClearDisplay();
 }
 
+
+// 初始化 planes
 HWC2::Error DrmHwcTwo::HwcDisplay::Init(std::vector<DrmPlane *> *planes) {
   supported(__func__);
   planner_ = Planner::CreateInstance(drm_);
@@ -199,7 +203,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::Init(std::vector<DrmPlane *> *planes) {
   }
 
   int display = static_cast<int>(handle_);
-  int ret = compositor_.Init(resource_manager_, display);
+  int ret = compositor_.Init(resource_manager_, display);  // 初始化 display compositor
   if (ret) {
     ALOGE("Failed display compositor init for display %d (%d)", display, ret);
     return HWC2::Error::NoResources;
@@ -211,25 +215,25 @@ HWC2::Error DrmHwcTwo::HwcDisplay::Init(std::vector<DrmPlane *> *planes) {
   property_get("hwc.drm.use_overlay_planes", use_overlay_planes_prop, "1");
   bool use_overlay_planes = atoi(use_overlay_planes_prop);
   for (auto &plane : *planes) {
-    if (plane->type() == DRM_PLANE_TYPE_PRIMARY)
+    if (plane->type() == DRM_PLANE_TYPE_PRIMARY)  // primary 以及 overlay plane 都 push_back 到对应的 planes 容器中
       primary_planes_.push_back(plane);
     else if (use_overlay_planes && (plane)->type() == DRM_PLANE_TYPE_OVERLAY)
       overlay_planes_.push_back(plane);
   }
 
-  crtc_ = drm_->GetCrtcForDisplay(display);
+  crtc_ = drm_->GetCrtcForDisplay(display);  // 获取所有的 display crtc_
   if (!crtc_) {
     ALOGE("Failed to get crtc for display %d", display);
     return HWC2::Error::BadDisplay;
   }
 
-  connector_ = drm_->GetConnectorForDisplay(display);
+  connector_ = drm_->GetConnectorForDisplay(display);   // 获取所有的 connector_
   if (!connector_) {
     ALOGE("Failed to get connector for display %d", display);
     return HWC2::Error::BadDisplay;
   }
 
-  ret = vsync_worker_.Init(drm_, display);
+  ret = vsync_worker_.Init(drm_, display);   // 开启 vsync_worker 线程
   if (ret) {
     ALOGE("Failed to create event worker for d=%d %d\n", display, ret);
     return HWC2::Error::BadDisplay;
@@ -262,7 +266,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::AcceptDisplayChanges() {
     l.second.accept_type_change();
   return HWC2::Error::None;
 }
-
+// drm——hwc 创建 Layer，同时将创建的 layer 压入 layers_ 容器中，对应的 idx++
 HWC2::Error DrmHwcTwo::HwcDisplay::CreateLayer(hwc2_layer_t *layer) {
   supported(__func__);
   layers_.emplace(static_cast<hwc2_layer_t>(layer_idx_), HwcLayer());
@@ -291,6 +295,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::GetChangedCompositionTypes(
     uint32_t *num_elements, hwc2_layer_t *layers, int32_t *types) {
   supported(__func__);
   uint32_t num_changes = 0;
+  // 获取改变的 compositionTypes 类型
   for (std::pair<const hwc2_layer_t, DrmHwcTwo::HwcLayer> &l : layers_) {
     if (l.second.type_changed()) {
       if (layers && num_changes < *num_elements)
@@ -339,6 +344,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::GetColorModes(uint32_t *num_modes,
   return HWC2::Error::None;
 }
 
+// 获取 displayAttributes 属性
 HWC2::Error DrmHwcTwo::HwcDisplay::GetDisplayAttribute(hwc2_config_t config,
                                                        int32_t attribute_in,
                                                        int32_t *value) {
@@ -474,6 +480,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::GetDisplayConfigs(uint32_t *num_configs,
   return HWC2::Error::None;
 }
 
+// 获取显示DisplayName 名称
 HWC2::Error DrmHwcTwo::HwcDisplay::GetDisplayName(uint32_t *size, char *name) {
   supported(__func__);
   std::ostringstream stream;
@@ -522,6 +529,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::GetHdrCapabilities(
   return HWC2::Error::None;
 }
 
+// 获取 release Fences
 HWC2::Error DrmHwcTwo::HwcDisplay::GetReleaseFences(uint32_t *num_elements,
                                                     hwc2_layer_t *layers,
                                                     int32_t *fences) {
@@ -556,7 +564,7 @@ void DrmHwcTwo::HwcDisplay::AddFenceToRetireFence(int fd) {
     next_retire_fence_.Set(dup(fd));
   }
 }
-
+// 通过 DrmHwcTwo 创建 Composition 合成器
 HWC2::Error DrmHwcTwo::HwcDisplay::CreateComposition(bool test) {
   std::vector<DrmCompositionDisplayLayersMap> layers_map;
   layers_map.emplace_back();
@@ -565,6 +573,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::CreateComposition(bool test) {
   map.display = static_cast<int>(handle_);
   map.geometry_changed = true;  // TODO: Fix this
 
+  // 通过 z-order 对 layers 进行排序
   // order the layers by z-order
   bool use_client_layer = false;
   uint32_t client_z_order = UINT32_MAX;
@@ -611,20 +620,21 @@ HWC2::Error DrmHwcTwo::HwcDisplay::CreateComposition(bool test) {
     map.layers.emplace_back(std::move(layer));
   }
 
+  // 通过 compositor_ 创建 Composition
   std::unique_ptr<DrmDisplayComposition> composition = compositor_
-                                                           .CreateComposition();
-  composition->Init(drm_, crtc_, importer_.get(), planner_.get(), frame_no_);
+                                                           .CreateComposition(); 
+  composition->Init(drm_, crtc_, importer_.get(), planner_.get(), frame_no_); // 初始化 composition
 
   // TODO: Don't always assume geometry changed
-  int ret = composition->SetLayers(map.layers.data(), map.layers.size(), true);
+  int ret = composition->SetLayers(map.layers.data(), map.layers.size(), true); // composition setLayers
   if (ret) {
     ALOGE("Failed to set layers in the composition ret=%d", ret);
     return HWC2::Error::BadLayer;
   }
 
-  std::vector<DrmPlane *> primary_planes(primary_planes_);
+  std::vector<DrmPlane *> primary_planes(primary_planes_);  // 设置 primary_planes 以及 overlay_planes
   std::vector<DrmPlane *> overlay_planes(overlay_planes_);
-  ret = composition->Plan(&primary_planes, &overlay_planes);
+  ret = composition->Plan(&primary_planes, &overlay_planes); // composition plan 合成计划
   if (ret) {
     ALOGE("Failed to plan the composition ret=%d", ret);
     return HWC2::Error::BadConfig;
@@ -654,6 +664,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::CreateComposition(bool test) {
   return HWC2::Error::None;
 }
 
+// 开始显示
 HWC2::Error DrmHwcTwo::HwcDisplay::PresentDisplay(int32_t *retire_fence) {
   supported(__func__);
   HWC2::Error ret;
@@ -675,7 +686,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::PresentDisplay(int32_t *retire_fence) {
   ++frame_no_;
   return HWC2::Error::None;
 }
-
+// 设置当前的 ActiveConfig
 HWC2::Error DrmHwcTwo::HwcDisplay::SetActiveConfig(hwc2_config_t config) {
   supported(__func__);
   auto mode = std::find_if(connector_->modes().begin(),
@@ -710,7 +721,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::SetActiveConfig(hwc2_config_t config) {
                              .top = 0.0f,
                              .right = mode->h_display() + 0.0f,
                              .bottom = mode->v_display() + 0.0f};
-  client_layer_.SetLayerSourceCrop(source_crop);
+  client_layer_.SetLayerSourceCrop(source_crop);  // 设置client 端的显示区域
 
   return HWC2::Error::None;
 }
@@ -791,6 +802,7 @@ HWC2::Error DrmHwcTwo::HwcDisplay::ValidateDisplay(uint32_t *num_types,
   supported(__func__);
   *num_types = 0;
   *num_requests = 0;
+  // 获取当前可用的 planes
   size_t avail_planes = primary_planes_.size() + overlay_planes_.size();
   bool comp_failed = false;
 
@@ -847,7 +859,7 @@ HWC2::Error DrmHwcTwo::HwcLayer::SetLayerBlendMode(int32_t mode) {
   blending_ = static_cast<HWC2::BlendMode>(mode);
   return HWC2::Error::None;
 }
-
+// 设置 LayerBuffer， buffer 提供显示使用
 HWC2::Error DrmHwcTwo::HwcLayer::SetLayerBuffer(buffer_handle_t buffer,
                                                 int32_t acquire_fence) {
   supported(__func__);
@@ -1020,7 +1032,7 @@ void DrmHwcTwo::HookDevGetCapabilities(hwc2_device_t * /*dev*/,
   *out_count = 0;
 }
 
-// static
+// static 获取 Drm Function 函数指针
 hwc2_function_pointer_t DrmHwcTwo::HookDevGetFunction(
     struct hwc2_device * /*dev*/, int32_t descriptor) {
   supported(__func__);

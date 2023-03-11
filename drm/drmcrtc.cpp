@@ -29,7 +29,7 @@ namespace android {
 DrmCrtc::DrmCrtc(DrmDevice *drm, drmModeCrtcPtr c, unsigned pipe)
     : drm_(drm), id_(c->crtc_id), pipe_(pipe), display_(-1), mode_(&c->mode) {
 }
-
+// 初始化 DrmCrtc
 int DrmCrtc::Init() {
   int ret = drm_->GetCrtcProperty(*this, "ACTIVE", &active_property_);
   if (ret) {

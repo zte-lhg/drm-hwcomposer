@@ -66,7 +66,7 @@ void DrmEventListener::RegisterHotplugHandler(DrmEventHandler *handler) {
   assert(!hotplug_handler_);
   hotplug_handler_.reset(handler);
 }
-
+// 侦听当前 内核 EventListener 
 void DrmEventListener::FlipHandler(int /* fd */, unsigned int /* sequence */,
                                    unsigned int tv_sec, unsigned int tv_usec,
                                    void *user_data) {

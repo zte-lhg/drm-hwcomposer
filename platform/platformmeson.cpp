@@ -75,6 +75,7 @@ uint64_t MesonImporter::ConvertGrallocFormatToDrmModifiers(
 }
 #endif
 
+// 导入 buffer
 int MesonImporter::ImportBuffer(buffer_handle_t handle, hwc_drm_bo_t *bo) {
   uint64_t modifiers[4] = {0};
 

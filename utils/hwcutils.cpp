@@ -41,6 +41,7 @@ void DrmHwcBuffer::Clear() {
   }
 }
 
+// drmHwcBuffer importBuffer 导入buffer
 int DrmHwcBuffer::ImportBuffer(buffer_handle_t handle, Importer *importer) {
   hwc_drm_bo tmp_bo;
 

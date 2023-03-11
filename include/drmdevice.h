@@ -91,7 +91,7 @@ class DrmDevice {
   UniqueFd fd_;
   uint32_t mode_id_ = 0;
 
-  std::vector<std::unique_ptr<DrmConnector>> connectors_;
+  std::vector<std::unique_ptr<DrmConnector>> connectors_; // 一个 device 对应多个 DrmConnector 以及多个 connector 与 Encoder
   std::vector<std::unique_ptr<DrmConnector>> writeback_connectors_;
   std::vector<std::unique_ptr<DrmEncoder>> encoders_;
   std::vector<std::unique_ptr<DrmCrtc>> crtcs_;

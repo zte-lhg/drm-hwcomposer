@@ -106,9 +106,9 @@ int DrmDisplayCompositor::Init(ResourceManager *resource_manager, int display) {
     ALOGE("Failed to initialize drm compositor lock %d\n", ret);
     return ret;
   }
-  planner_ = Planner::CreateInstance(drm);
+  planner_ = Planner::CreateInstance(drm);  // 创建 Planner instance 实例
 
-  vsync_worker_.Init(drm, display_);
+  vsync_worker_.Init(drm, display_);  // 初始化 vsync_worker
   auto callback = std::make_shared<CompositorVsyncCallback>(this);
   vsync_worker_.RegisterCallback(callback);
 
@@ -191,6 +191,7 @@ int DrmDisplayCompositor::DisablePlanes(DrmDisplayComposition *display_comp) {
   return 0;
 }
 
+// 设置回写的 commit
 int DrmDisplayCompositor::SetupWritebackCommit(drmModeAtomicReqPtr pset,
                                                uint32_t crtc_id,
                                                DrmConnector *writeback_conn,
@@ -229,7 +230,7 @@ int DrmDisplayCompositor::SetupWritebackCommit(drmModeAtomicReqPtr pset,
   }
   return 0;
 }
-
+// CommitFrame 提交 DrmDisplay
 int DrmDisplayCompositor::CommitFrame(DrmDisplayComposition *display_comp,
                                       bool test_only,
                                       DrmConnector *writeback_conn,
@@ -613,7 +614,7 @@ int DrmDisplayCompositor::ApplyComposition(
   int ret = 0;
   switch (composition->type()) {
     case DRM_COMPOSITION_TYPE_FRAME:
-      if (composition->geometry_changed()) {
+      if (composition->geometry_changed()) { // 向内核提交当前的 Frame 帧
         // Send the composition to the kernel to ensure we can commit it. This
         // is just a test, it won't actually commit the frame.
         ret = CommitFrame(composition.get(), true);

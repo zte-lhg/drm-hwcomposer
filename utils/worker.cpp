@@ -21,6 +21,7 @@
 
 namespace android {
 
+// worker 线程
 Worker::Worker(const char *name, int priority)
     : name_(name), priority_(priority), exit_(false), initialized_(false) {
 }
@@ -29,6 +30,7 @@ Worker::~Worker() {
   Exit();
 }
 
+// 初始化 worker 线程
 int Worker::InitWorker() {
   std::lock_guard<std::mutex> lk(mutex_);
   if (initialized())

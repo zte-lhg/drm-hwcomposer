@@ -123,7 +123,7 @@ int DrmDisplayComposition::Plan(std::vector<DrmPlane *> *primary_planes,
       continue;
 
     // make sure that source layers are ordered based on zorder
-    std::sort(i.source_layers().begin(), i.source_layers().end());
+    std::sort(i.source_layers().begin(), i.source_layers().end()); // 对 source_layers 进行排序
 
     std::vector<DrmPlane *> *container;
     if (i.plane()->type() == DRM_PLANE_TYPE_PRIMARY)

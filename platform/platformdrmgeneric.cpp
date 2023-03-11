@@ -134,7 +134,7 @@ int DrmGenericImporter::ImportBuffer(buffer_handle_t handle, hwc_drm_bo_t *bo) {
   bo->pitches[0] = gr_handle->stride;
   bo->gem_handles[0] = gem_handle;
   bo->offsets[0] = 0;
-
+  // 通过调用此接口，将 DrmMode 添加到内核 DB
   ret = drmModeAddFB2(drm_->fd(), bo->width, bo->height, bo->format,
                       bo->gem_handles, bo->pitches, bo->offsets, &bo->fb_id, 0);
   if (ret) {
